@@ -1,5 +1,5 @@
 from django.db import models
-from models.account import Account
+from api.models.account import Account
 
 
 class Transaction(models.Model):

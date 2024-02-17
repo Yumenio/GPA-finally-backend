@@ -1,6 +1,6 @@
 from ninja import Router
 
-from schemas.transaction import TransactionCreateSchema, TransactionUpdateSchema
+from api.schemas.transaction import TransactionCreateSchema, TransactionUpdateSchema
 
 router = Router()
 

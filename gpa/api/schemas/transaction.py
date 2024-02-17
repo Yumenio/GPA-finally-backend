@@ -1,5 +1,5 @@
 from ninja import ModelSchema
-from models.transaction import Transaction
+from api.models.transaction import Transaction
 
 
 class TransactionSchema(ModelSchema):

@@ -1,5 +1,5 @@
 from ninja import ModelSchema
-from models.account import Account
+from api.models.account import Account
 
 
 class AccountSchema(ModelSchema):

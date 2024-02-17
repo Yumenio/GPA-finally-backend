@@ -1,5 +1,6 @@
 from ninja import Router
-from schemas.account import AccountSchema, AccountCreateSchema, AccountUpdateSchema
+from api.schemas.account import AccountSchema, AccountCreateSchema, AccountUpdateSchema
+from api.models.account import Account
 
 router = Router()
 
