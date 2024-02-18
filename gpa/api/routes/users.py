@@ -1,9 +1,8 @@
+from django.shortcuts import get_object_or_404
 from ninja import Router
 from django.http import (
     JsonResponse,
-    HttpResponse,
     HttpResponseServerError,
-    HttpResponseNotFound,
 )
 from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
@@ -18,7 +17,7 @@ def register_user(request, user: UserCreateSchema):
     try:
         new_user = User(**user.model_dump())
         new_user.save()
-    except IntegrityError as e:
+    except IntegrityError:
         return HttpResponseServerError(f"Username already exists")
     except Exception as e:
         return HttpResponseServerError(f"An error ocurred: {str(e)}")
@@ -32,7 +31,5 @@ def get_all_users(request):
 
 @router.delete("{id}", response={204: None})
 def delete_user(request, id):
-    try:
-        User.objects.get(pk=id).delete()
-    except Exception as e:
-        return HttpResponseNotFound()
+    account = get_object_or_404(User, id=id)
+    account.delete()
