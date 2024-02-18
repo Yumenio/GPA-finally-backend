@@ -1,7 +1,7 @@
 from ninja import Router
 from django.shortcuts import get_object_or_404
 from django.db.utils import IntegrityError
-from django.http import HttpResponseServerError, JsonResponse, HttpResponseNotFound
+from django.http import HttpResponseServerError, JsonResponse
 
 from api.models.account import Account
 from api.models.transaction import Transaction

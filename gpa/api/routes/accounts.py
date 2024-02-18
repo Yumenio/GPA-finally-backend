@@ -16,7 +16,7 @@ def create_account(request, account: AccountCreateSchema):
         new_account = Account(**account.model_dump())
         new_account.save()
     except IntegrityError:
-        return HttpResponseNotFound(f"User not found")
+        return HttpResponseNotFound("User not found")
     except Exception as e:
         return HttpResponseServerError(f"An error ocurred: {str(e)}")
 

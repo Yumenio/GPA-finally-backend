@@ -18,7 +18,7 @@ def register_user(request, user: UserCreateSchema):
         new_user = User(**user.model_dump())
         new_user.save()
     except IntegrityError:
-        return HttpResponseServerError(f"Username already exists")
+        return HttpResponseServerError("Username already exists")
     except Exception as e:
         return HttpResponseServerError(f"An error ocurred: {str(e)}")
     return {"created_user": user}
