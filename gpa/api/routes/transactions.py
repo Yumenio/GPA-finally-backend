@@ -1,30 +1,64 @@
 from ninja import Router
+from django.shortcuts import get_object_or_404
+from django.db.utils import IntegrityError
+from django.http import HttpResponseServerError, JsonResponse, HttpResponseNotFound
 
-from api.schemas.transaction import TransactionCreateSchema, TransactionUpdateSchema
+from api.models.account import Account
+from api.models.transaction import Transaction
+from api.schemas.transaction import (
+    TransactionTypes,
+    TransactionCreateSchema,
+    TransactionUpdateSchema,
+)
+from api.utils import to_dict
 
 router = Router()
 
 
-@router.post("create/")
+@router.post("create/", response={201: None})
 def create_transaction(request, transaction: TransactionCreateSchema):
-    return {"created": transaction.model_dump()}
+    owner_account = get_object_or_404(Account, ID=transaction.account_id)
+    transaction.transaction_type = (
+        "CREDIT" if transaction.transaction_type == TransactionTypes.credit else "DEBIT"
+    )
+
+    try:
+        new_transaction = Transaction(account=owner_account, **transaction.model_dump())
+        print(new_transaction)
+        new_transaction.save()
+
+        # amount will be negative if transaction_type is CREDIT
+        amount = (
+            transaction.amount
+            if transaction.transaction_type == "DEBIT"
+            else -transaction.amount
+        )
+        owner_account.current_balance += amount
+        owner_account.save()
+    except IntegrityError:
+        pass
+    except Exception as e:
+        return HttpResponseServerError(f"An error ocurred: {str(e)}")
 
 
 @router.get("{id}")
 def get_transaction(request, id):
-    return {"transaction_id": id}
+    transaction = get_object_or_404(Transaction, ID=id)
+    return to_dict(transaction)
 
 
 @router.get("")
 def get_all_transactions(request):
-    return {"all_transactions": []}
+    return JsonResponse(list(Transaction.objects.all().values()), safe=False)
 
 
+# I'm not sure wether updating a transaction should be allowed
 @router.put("{id}")
 def update_transaction(request, id, transactionData: TransactionUpdateSchema):
-    return {"updated": transactionData.model_dump()}
+    raise NotImplementedError()
 
 
+# Same as for updating a transaction
 @router.delete("{id}")
 def delete_transaction(request, id):
-    return {"deleted": id}
+    raise NotImplementedError()
