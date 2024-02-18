@@ -3,8 +3,6 @@ from api.models.account import Account
 
 
 class AccountSchema(ModelSchema):
-    user_id: int
-
     class Meta:
         model = Account
         fields = ["current_balance"]
@@ -12,7 +10,7 @@ class AccountSchema(ModelSchema):
 
 
 class AccountCreateSchema(AccountSchema):
-    pass
+    user_id: int
 
 
 class AccountUpdateSchema(AccountSchema):
