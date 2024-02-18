@@ -1,30 +1,45 @@
+from django.db.utils import IntegrityError
+from django.http import HttpResponseServerError, JsonResponse, HttpResponseNotFound
+from django.shortcuts import get_object_or_404
 from ninja import Router
-from api.schemas.account import AccountSchema, AccountCreateSchema, AccountUpdateSchema
+
+from api.schemas.account import AccountCreateSchema, AccountUpdateSchema
 from api.models.account import Account
+from api.utils import to_dict
 
 router = Router()
 
 
-@router.post("create")
+@router.post("create", response={201: None})
 def create_account(request, account: AccountCreateSchema):
-    return {"status": "account created succesfully"}
+    try:
+        new_account = Account(**account.model_dump())
+        new_account.save()
+    except IntegrityError:
+        return HttpResponseNotFound(f"User not found")
+    except Exception as e:
+        return HttpResponseServerError(f"An error ocurred: {str(e)}")
 
 
 @router.get("{id}")
 def get_account(request, id):
-    return {"account_id": id}
+    account = get_object_or_404(Account, ID=id)
+    return to_dict(account)
 
 
-@router.get("")
+@router.get("", response={200: None})
 def get_all_accounts(request):
-    return {"all_accounts": []}
+    return JsonResponse(list(Account.objects.all().values()), safe=False)
 
 
-@router.put("{id}")
+@router.put("{id}", response={201: None})
 def update_account(request, id, accountData: AccountUpdateSchema):
-    return {"updated_account_id": id}
+    account = get_object_or_404(Account, ID=id)
+    account.current_balance = accountData.current_balance
+    account.save()
 
 
-@router.delete("{id}")
+@router.delete("{id}", response={204: None})
 def delete_account(request, id):
-    return {"deteled_account_id": id}
+    account = get_object_or_404(Account, ID=id)
+    account.delete()
