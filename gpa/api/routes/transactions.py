@@ -34,6 +34,9 @@ def create_transaction(request, transaction: TransactionCreateSchema):
             else -transaction.amount
         )
         owner_account.current_balance += amount
+        # do we wanna have accounts with negative balance?
+        if owner_account.current_balance < 0:
+            raise Exception("Not enough funds")
         owner_account.save()
     except IntegrityError:
         pass
