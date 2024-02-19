@@ -47,6 +47,13 @@ def get_transaction(request, id):
     return to_dict(transaction)
 
 
+@router.get("/account/{account_id}")
+def get_transactions_by_account(request, account_id):
+    get_object_or_404(Account, ID=account_id)
+    transactions = Transaction.objects.filter(account_id=account_id)
+    return [to_dict(t) for t in transactions]
+
+
 @router.get("")
 def get_all_transactions(request):
     return JsonResponse(list(Transaction.objects.all().values()), safe=False)
