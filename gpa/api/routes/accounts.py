@@ -1,4 +1,5 @@
 from django.db.utils import IntegrityError
+from django.contrib.auth.models import User
 from django.http import HttpResponseServerError, JsonResponse, HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from ninja import Router
@@ -25,6 +26,13 @@ def create_account(request, account: AccountCreateSchema):
 def get_account(request, id):
     account = get_object_or_404(Account, ID=id)
     return to_dict(account)
+
+
+@router.get("/user/{user_id}")
+def get_account_by_user_id(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    accounts = Account.objects.filter(user_id=user_id)
+    return [to_dict(acc) for acc in accounts]
 
 
 @router.get("", response={200: None})
