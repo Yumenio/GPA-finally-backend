@@ -1,16 +1,16 @@
-from ninja import ModelSchema
+from ninja import Schema
 from django.contrib.auth.models import User
 
 
-class UserSchema(ModelSchema):
-    class Meta:
-        model = User
-        fields = ["username"]
+class UserCreateSchema(Schema):
+    username: str
+    password: str
 
 
-class UserCreateSchema(UserSchema):
-    pass
+class UserUpdateSchema(Schema):
+    password: str
 
 
-class UserUpdateSchema(UserSchema):
-    pass
+class LoginCredentials(Schema):
+    username: str
+    password: str
