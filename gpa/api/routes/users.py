@@ -1,5 +1,6 @@
 import jwt
 from django.conf import settings
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from ninja import Router
 from django.contrib.auth import authenticate
@@ -26,13 +27,16 @@ def authenticate_user(request, username, password):
 @router.post("register")
 def register_user(request, user: UserCreateSchema):
     try:
-        user = User.objects.create_user(username=user.username, password=user.password)
-        token = generate_token(user)
+        with transaction.atomic():
+            user = User.objects.create_user(
+                username=user.username, password=user.password
+            )
+            token = generate_token(user)
+            return {"user_id": user.id, "token": token}
     except IntegrityError:
         return HttpResponseServerError("Username already exists")
     except Exception as e:
         return HttpResponseServerError(f"An error ocurred: {str(e)}")
-    return {"user_id": user.id, "token": token}
 
 
 @router.post("login")

@@ -1,5 +1,4 @@
 from ninja import Schema
-from django.contrib.auth.models import User
 
 
 class UserCreateSchema(Schema):

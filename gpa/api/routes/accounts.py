@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
 from django.http import (
@@ -19,8 +20,9 @@ router = Router()
 @router.post("create", response={201: None})
 def create_account(request, account: AccountCreateSchema):
     try:
-        new_account = Account(**account.model_dump())
-        new_account.save()
+        with transaction.atomic():
+            new_account = Account(**account.model_dump())
+            new_account.save()
     except IntegrityError:
         return HttpResponseNotFound("User not found")
     except Exception as e:
