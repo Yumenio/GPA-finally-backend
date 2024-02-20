@@ -67,7 +67,7 @@ def get_transactions_by_account(request, account_id):
     owner = User.objects.get(id=account.user.id)
     if request.auth["user_id"] != owner.id:
         return HttpResponseForbidden("User doesn't own the account of that transaction")
-    transactions = Transaction.objects.filter(account_id=account_id)
+    transactions = Transaction.objects.filter(account_id=account_id).order_by("date")
     return [to_dict(t) for t in transactions]
 
 
