@@ -1,4 +1,5 @@
 from ninja import Router
+from django.db import transaction as transaction_manager
 from django.shortcuts import get_object_or_404
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
@@ -24,21 +25,24 @@ def create_transaction(request, transaction: TransactionCreateSchema):
     )
 
     try:
-        new_transaction = Transaction(account=owner_account, **transaction.model_dump())
-        print(new_transaction)
-        new_transaction.save()
-
-        # amount will be negative if transaction_type is CREDIT
         amount = (
             transaction.amount
             if transaction.transaction_type == "DEBIT"
             else -transaction.amount
         )
-        owner_account.current_balance += amount
-        # do we wanna have accounts with negative balance?
-        if owner_account.current_balance < 0:
-            raise Exception("Not enough funds")
-        owner_account.save()
+        # since we are creating/modifying two db entries, we should rollback if anything goes wrong
+        with transaction_manager.atomic():
+            new_transaction = Transaction(
+                account=owner_account, **transaction.model_dump()
+            )
+            new_transaction.save()
+
+            # amount will be negative if transaction_type is CREDIT
+            owner_account.current_balance += amount
+            # do we wanna have accounts with negative balance?
+            if owner_account.current_balance < 0:
+                raise Exception("Not enough funds")
+            owner_account.save()
     except IntegrityError:
         pass
     except Exception as e:

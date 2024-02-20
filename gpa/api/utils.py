@@ -16,5 +16,4 @@ def to_dict(instance):
 
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
-        print("token", token)
         return decode(token, settings.SECRET_KEY, "HS256")
