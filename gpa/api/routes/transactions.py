@@ -1,7 +1,8 @@
 from ninja import Router
 from django.shortcuts import get_object_or_404
 from django.db.utils import IntegrityError
-from django.http import HttpResponseServerError, JsonResponse
+from django.contrib.auth.models import User
+from django.http import HttpResponseServerError, JsonResponse, HttpResponseForbidden
 
 from api.models.account import Account
 from api.models.transaction import Transaction
@@ -10,7 +11,7 @@ from api.schemas.transaction import (
     TransactionCreateSchema,
     TransactionUpdateSchema,
 )
-from api.utils import to_dict
+from api.utils import AuthBearer, to_dict
 
 router = Router()
 
@@ -44,15 +45,24 @@ def create_transaction(request, transaction: TransactionCreateSchema):
         return HttpResponseServerError(f"An error ocurred: {str(e)}")
 
 
-@router.get("{id}")
+@router.get("{id}", auth=AuthBearer())
 def get_transaction(request, id):
+    # check that transaction exists
     transaction = get_object_or_404(Transaction, ID=id)
+    # check who owns the transaction
+    owner = Account.objects.filter(ID=transaction.account_id).first().user_id
+    # check that jwt token was issued to the owner of this transaction
+    if request.auth["user_id"] != owner:
+        return HttpResponseForbidden("User doesn't own the account of that transaction")
     return to_dict(transaction)
 
 
-@router.get("/account/{account_id}")
+@router.get("/account/{account_id}", auth=AuthBearer())
 def get_transactions_by_account(request, account_id):
-    get_object_or_404(Account, ID=account_id)
+    account = get_object_or_404(Account, ID=account_id)
+    owner = User.objects.get(id=account.user.id)
+    if request.auth["user_id"] != owner.id:
+        return HttpResponseForbidden("User doesn't own the account of that transaction")
     transactions = Transaction.objects.filter(account_id=account_id)
     return [to_dict(t) for t in transactions]
 
