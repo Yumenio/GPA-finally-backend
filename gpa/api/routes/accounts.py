@@ -1,12 +1,17 @@
 from django.db.utils import IntegrityError
 from django.contrib.auth.models import User
-from django.http import HttpResponseServerError, JsonResponse, HttpResponseNotFound
+from django.http import (
+    HttpResponseServerError,
+    JsonResponse,
+    HttpResponseNotFound,
+    HttpResponseForbidden,
+)
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
 from api.schemas.account import AccountCreateSchema, AccountUpdateSchema
 from api.models.account import Account
-from api.utils import to_dict
+from api.utils import AuthBearer, to_dict
 
 router = Router()
 
@@ -28,9 +33,11 @@ def get_account(request, id):
     return to_dict(account)
 
 
-@router.get("/user/{user_id}")
+@router.get("/user/{user_id}", auth=AuthBearer())
 def get_account_by_user_id(request, user_id):
     user = get_object_or_404(User, id=user_id)
+    if request.auth["user_id"] != user.id:
+        return HttpResponseForbidden("Invalid credentials")
     accounts = Account.objects.filter(user_id=user_id)
     return [to_dict(acc) for acc in accounts]
 
